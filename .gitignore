@@ -1,0 +1,36 @@
+# --- Build Outputs ---
+node_modules/
+dist/
+.svelte-kit/
+build/
+
+# --- Rust / Tauri Specific ---
+# This is the 3.4GB folder! 
+src-tauri/target/
+
+# Ignore local Tauri environment settings
+src-tauri/.tauri
+
+# --- SvelteKit / Vite ---
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- OS / IDE Specific ---
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
