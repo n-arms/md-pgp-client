@@ -3,16 +3,12 @@
   import { Button } from "$lib/components/ui/button/index.js";
 </script>
 
-<main class="container">
-  <h1>md pgp</h1>
-  <Button variant="outline" href="/file">File</Button>
-  <button
-    type="button"
-    class="border-2 border-gray-700"
-    on:click={() => console.log("bello")}
-  >
-    Click Me!
-  </button>
-  <a href="/file">File</a>
-  <a href="/setup">Setup</a>
-</main>
+<div class="h-full w-full flex flex-col justify-center items-center">
+  <h1 class="scroll-m-20 text-6xl font-extrabold tracking-tight lg:text-7xl">
+    MD PGP
+  </h1>
+  <div class="flex flex-row space-x-4 mt-8">
+    <Button variant="outline" href="/file">File</Button>
+    <Button variant="outline" href="/setup">Setup</Button>
+  </div>
+</div>
