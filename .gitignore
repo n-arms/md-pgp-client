@@ -5,8 +5,7 @@ dist/
 build/
 
 # --- Rust / Tauri Specific ---
-# This is the 3.4GB folder! 
-src-tauri/target/
+**/target/**
 
 # Ignore local Tauri environment settings
 src-tauri/.tauri
