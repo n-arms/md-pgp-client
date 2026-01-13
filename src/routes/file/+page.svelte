@@ -2,21 +2,18 @@
   import Button from "$lib/components/ui/button/button.svelte";
   import { invoke } from "@tauri-apps/api/core";
 
-  let message = $state("");
-  let rust_msg = $state("");
-
-  $effect(() => {
-    const update_rust_msg = async () => {
-      try {
-        const result = await invoke<string>("textarea_updated", { value: message });
-        rust_msg = result;
-      } catch (err) {
-        console.error("Failed to call Rust:", err);
-      }
-    };
-
-    update_rust_msg();
-  });
+  const beforeInputHandler = async e => {
+    const {selectionStart, selectionEnd} = e.target;
+    const args = { start: selectionStart, end: selectionEnd };
+    if (e.inputType === "insertText") {
+      args.text = e.data;
+      await invoke("insert_text", args);
+    } else if (e.inputType === "deleteContentBackward") {
+      await invoke("delete_text", args);
+    } else {
+      alert(`Unknown input type ${e.inputType}`);
+    }
+  };
 </script>
 
 <div class="container w-full mx-auto p-4">
@@ -31,7 +28,7 @@
     </div>
   </div>
   <textarea
-    bind:value={message}
+    onbeforeinput={beforeInputHandler}
     placeholder="Type your markdown content here..."
     class="w-full h-96 border border-gray-300 rounded-md p-2 mt-4"
   ></textarea>
