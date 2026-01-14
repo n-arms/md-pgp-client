@@ -58,6 +58,10 @@ impl Rga {
         }
     }
 
+    pub fn root(&self) -> Id {
+        self.root
+    }
+
     pub fn insert(&mut self, char: char, parent: Id) -> Id {
         let parent_node = &self.nodes[&parent];
         let max_node = parent_node
@@ -77,6 +81,11 @@ impl Rga {
             device: self.device,
         };
         self.nodes.get_mut(&parent).unwrap().children.push(id);
+        self.nodes
+            .get_mut(&parent)
+            .unwrap()
+            .children
+            .sort_by(|a, b| a.cmp(b).reverse());
 
         self.nodes.insert(
             id,
@@ -120,6 +129,39 @@ impl Rga {
         self.to_list_from(self.root, &mut text);
         text
     }
+
+    pub fn index(&self, index: usize) -> Id {
+        // If index is 0, we return root immediately.
+        // Otherwise, we search for the n-th visible node.
+        if index == 0 {
+            return self.root;
+        }
+        // We search for the n-th visible node starting from root
+        self.index_after(&self.root, index)
+            .expect("Index out of bounds")
+    }
+
+    fn index_after(&self, current_id: &Id, mut remaining: usize) -> Result<Id, usize> {
+        let node = &self.nodes[current_id];
+
+        // Root is a sentinel, so we don't count it as a "visible character".
+        // Only decrement if this is a real, non-deleted character.
+        if current_id != &self.root && !node.is_deleted {
+            if remaining == 1 {
+                return Ok(*current_id);
+            }
+            remaining -= 1;
+        }
+
+        for child in &node.children {
+            match self.index_after(child, remaining) {
+                Ok(found_id) => return Ok(found_id),
+                Err(new_remaining) => remaining = new_remaining,
+            }
+        }
+
+        Err(remaining)
+    }
 }
 
 #[cfg(test)]
@@ -157,7 +199,7 @@ mod tests {
         let _ = rga.insert('b', cursor);
         cursor = rga.insert('c', cursor2);
         let _ = cursor;
-        assert_eq!(rga.to_list(), "acb");
+        assert_eq!(rga.to_list(), "bac");
     }
 
     #[test]
@@ -168,6 +210,46 @@ mod tests {
         rga.insert('b', cursor);
         let _ = rga.insert('c', cursor2);
         rga.delete(cursor2);
-        assert_eq!(rga.to_list(), "cb");
+        assert_eq!(rga.to_list(), "bc");
+    }
+
+    #[test]
+    fn get_index() {
+        let mut rga = Rga::new(0);
+        let a = rga.insert('a', rga.root());
+        let b = rga.insert('b', a);
+        let c = rga.insert('c', b);
+        let d = rga.insert('d', c);
+
+        assert_eq!(rga.index(2), b);
+    }
+
+    #[test]
+    fn get_empty_index() {
+        let rga = Rga::new(0);
+        assert_eq!(rga.index(0), rga.root());
+    }
+
+    #[test]
+    fn index_based_insert_delete() {
+        let mut rga = Rga::new(0);
+        rga.insert('a', rga.root());
+        rga.delete(rga.index(1));
+        assert_eq!(rga.to_list(), "");
+    }
+
+    #[test]
+    fn index_insert2() {
+        let mut rga = Rga::new(0);
+        rga.insert('a', rga.index(0));
+        rga.insert('b', rga.index(1));
+        assert_eq!(rga.to_list(), "ab");
+    }
+
+    #[test]
+    fn index_based_twice_delete() {
+        let mut rga = Rga::new(0);
+        rga.insert('a', rga.index(0));
+        rga.insert('b', rga.index(1));
     }
 }
