@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use crate::rga::{Id, Rga};
 use rand::prelude::Rng;
 use rand::rng;
@@ -9,7 +7,6 @@ mod rga;
 
 pub struct AppState {
     rga: Rga,
-    outgoing_packets: VecDeque<Packet>,
 }
 
 #[derive(Clone, Debug)]
@@ -22,25 +19,22 @@ impl AppState {
     pub fn new() -> Self {
         let device: u32 = rng().random();
         let rga = Rga::new(device);
-        Self {
-            rga,
-            outgoing_packets: VecDeque::default(),
-        }
+        Self { rga }
     }
 
     pub fn insert_at_index(&mut self, index: usize, char: char) {
         let id = self.rga.index(index);
         self.rga.insert(char, id);
-        self.outgoing_packets
-            .push_back(Packet::Insert { parent: id, char });
+        self.push_packet(Packet::Insert { parent: id, char });
     }
 
     pub fn delete_at_index(&mut self, index: usize) {
         let id = self.rga.index(index);
         self.rga.delete(id);
-        self.outgoing_packets
-            .push_back(Packet::Delete { parent: id });
+        self.push_packet(Packet::Delete { parent: id });
     }
+
+    pub fn push_packet(&mut self, packet: Packet) {}
 }
 
 #[tauri::command]
