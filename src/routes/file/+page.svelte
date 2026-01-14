@@ -32,5 +32,4 @@
     placeholder="Type your markdown content here..."
     class="w-full h-96 border border-gray-300 rounded-md p-2 mt-4"
   ></textarea>
-  <p>{rust_msg}</p>
 </div>

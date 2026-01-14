@@ -58,6 +58,10 @@ impl Rga {
         }
     }
 
+    pub fn root(&self) -> Id {
+        self.root
+    }
+
     pub fn insert(&mut self, char: char, parent: Id) -> Id {
         let parent_node = &self.nodes[&parent];
         let max_node = parent_node
@@ -120,6 +124,31 @@ impl Rga {
         self.to_list_from(self.root, &mut text);
         text
     }
+
+    pub fn index(&self, index: usize) -> Id {
+        self.index_after(&self.root, index).unwrap()
+    }
+
+    /// returns `Ok(Id)` if there is a character that is `index` code points past `parent`,
+    /// or `Err(size)` if there are size < index characters that are children of parent
+    fn index_after(&self, parent: &Id, mut index: usize) -> Result<Id, usize> {
+        let node = &self.nodes[parent];
+        for child in &node.children {
+            if !&self.nodes[child].is_deleted {
+                if index == 0 {
+                    return Ok(*child);
+                } else {
+                    index -= 1;
+                }
+            }
+
+            match self.index_after(child, index) {
+                Ok(id) => return Ok(id),
+                Err(new_index) => index = new_index,
+            }
+        }
+        Err(index)
+    }
 }
 
 #[cfg(test)]
@@ -169,5 +198,16 @@ mod tests {
         let _ = rga.insert('c', cursor2);
         rga.delete(cursor2);
         assert_eq!(rga.to_list(), "cb");
+    }
+
+    #[test]
+    fn get_index() {
+        let mut rga = Rga::new(0);
+        let a = rga.insert('a', rga.root());
+        let b = rga.insert('b', rga.root());
+        let c = rga.insert('c', rga.root());
+        let d = rga.insert('d', rga.root());
+
+        assert_eq!(rga.index(2), c);
     }
 }
