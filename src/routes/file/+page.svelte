@@ -14,6 +14,9 @@
     } else if (e.inputType === "deleteContentBackward") {
       await invoke("delete_text", args);
       rust_msg = await invoke("get_text", {});
+    } else if (e.inputType === "insertLineBreak") {
+      args.text = "\n";
+      await invoke("insert_text", args);
     } else {
       alert(`Unknown input type ${e.inputType}`);
     }
