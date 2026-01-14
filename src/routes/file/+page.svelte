@@ -2,14 +2,18 @@
   import Button from "$lib/components/ui/button/button.svelte";
   import { invoke } from "@tauri-apps/api/core";
 
+  let rust_msg = $state("");
+
   const beforeInputHandler = async e => {
     const {selectionStart, selectionEnd} = e.target;
     const args = { start: selectionStart, end: selectionEnd };
     if (e.inputType === "insertText") {
       args.text = e.data;
       await invoke("insert_text", args);
+      rust_msg = await invoke("get_text", {});
     } else if (e.inputType === "deleteContentBackward") {
       await invoke("delete_text", args);
+      rust_msg = await invoke("get_text", {});
     } else {
       alert(`Unknown input type ${e.inputType}`);
     }
@@ -32,4 +36,5 @@
     placeholder="Type your markdown content here..."
     class="w-full h-96 border border-gray-300 rounded-md p-2 mt-4"
   ></textarea>
+  <p>{rust_msg}</p>
 </div>
