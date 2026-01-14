@@ -3,6 +3,7 @@ use rand::prelude::Rng;
 use rand::rng;
 use tauri::async_runtime::Mutex;
 
+mod config;
 mod rga;
 
 pub struct AppState {
