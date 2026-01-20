@@ -3,6 +3,7 @@ use rand::prelude::Rng;
 use rand::rng;
 use tauri::async_runtime::Mutex;
 
+mod config;
 mod rga;
 
 pub struct AppState {
@@ -84,6 +85,7 @@ pub fn run() {
         .manage(Mutex::new(AppState::new()))
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![insert_text, delete_text, get_text])
+        .plugin(tauri_plugin_store::Builder::default().build()) 
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

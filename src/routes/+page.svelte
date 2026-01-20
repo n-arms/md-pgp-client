@@ -1,6 +1,17 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
+  import { Store } from "@tauri-apps/plugin-store";
+  import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
+  import { goto } from "$app/navigation";
+
+  onMount(async () => {
+    const store = await Store.load("settings.json");
+    const hasSetup = await store.get("hasSetup");
+    if (!hasSetup) {
+      goto("/setup");
+    }
+  });
 </script>
 
 <div class="h-full w-full flex flex-col justify-center items-center">
