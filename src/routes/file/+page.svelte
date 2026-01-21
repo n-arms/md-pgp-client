@@ -7,7 +7,6 @@
 
   onMount(async() => {
     await invoke("open_new_file", {});
-    await invoke("load_store", {});
   });
 
   const beforeInputHandler = async e => {

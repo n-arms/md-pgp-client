@@ -1,11 +1,14 @@
 use crate::rga::{DeviceId, Id, Rga};
 use rand::prelude::Rng;
 use rand::rng;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::async_runtime::Mutex;
 use tauri::{AppHandle, Runtime, Wry};
 use tauri_plugin_store::StoreExt;
 
+mod packet;
+mod packet_types;
 mod rga;
 
 pub struct AppState {
@@ -133,6 +136,17 @@ async fn open_new_file(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), (
 async fn close_file(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), ()> {
     state.lock().await.file = None;
     Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DocInfo {
+    pub name: String,
+    pub id: String,
+}
+
+#[tauri::command]
+async fn get_file_list(state: tauri::State<'_, Mutex<AppState>>) -> Result<Vec<DocInfo>, ()> {
+    if let Some(addr) = &state.lock().await.server_addr.as_ref() {}
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

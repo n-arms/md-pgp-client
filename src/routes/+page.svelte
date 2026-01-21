@@ -5,11 +5,16 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { goto } from "$app/navigation";
 
+  let fileList = $state([]);
+
   onMount(async () => {
     const store = await Store.load("settings.json");
     const hasSetup = await store.get("hasSetup");
     if (!hasSetup) {
       goto("/setup");
+    } else {
+      await invoke("load_store", {});
+      fileList = invoke("get_file_list", {});
     }
   });
 </script>
