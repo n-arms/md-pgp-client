@@ -1,8 +1,14 @@
 <script lang="ts">
   import Button from "$lib/components/ui/button/button.svelte";
+  import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
 
   let rust_msg = $state("");
+
+  onMount(async() => {
+    await invoke("open_new_file", {});
+    await invoke("load_store", {});
+  });
 
   const beforeInputHandler = async e => {
     const {selectionStart, selectionEnd} = e.target;

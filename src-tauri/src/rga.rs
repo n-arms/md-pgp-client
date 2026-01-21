@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct DeviceId(pub u32);
+
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Id {
     pub id: u32,
-    pub device: u32,
+    pub device: DeviceId,
 }
 
 impl PartialOrd for Id {
@@ -25,7 +28,7 @@ impl Ord for Id {
 pub struct Rga {
     root: Id,
     nodes: HashMap<Id, Node>,
-    device: u32,
+    device: DeviceId,
     next_id: u32,
 }
 
@@ -38,7 +41,7 @@ pub struct Node {
 }
 
 impl Rga {
-    pub fn new(device: u32) -> Self {
+    pub fn new(device: DeviceId) -> Self {
         let mut nodes = HashMap::new();
         let root = Id { id: 0, device };
         nodes.insert(
@@ -170,8 +173,11 @@ mod tests {
 
     #[test]
     fn linear_add() {
-        let mut rga = Rga::new(0);
-        let mut cursor = Id { id: 0, device: 0 };
+        let mut rga = Rga::new(DeviceId(0));
+        let mut cursor = Id {
+            id: 0,
+            device: DeviceId(0),
+        };
         cursor = rga.insert('a', cursor);
         cursor = rga.insert('b', cursor);
         cursor = rga.insert('c', cursor);
@@ -181,8 +187,11 @@ mod tests {
 
     #[test]
     fn linear_add_del() {
-        let mut rga = Rga::new(0);
-        let mut cursor = Id { id: 0, device: 0 };
+        let mut rga = Rga::new(DeviceId(0));
+        let mut cursor = Id {
+            id: 0,
+            device: DeviceId(0),
+        };
         cursor = rga.insert('a', cursor);
         cursor = rga.insert('b', cursor);
         cursor = rga.insert('c', cursor);
@@ -193,8 +202,11 @@ mod tests {
 
     #[test]
     fn weird_add() {
-        let mut rga = Rga::new(0);
-        let mut cursor = Id { id: 0, device: 0 };
+        let mut rga = Rga::new(DeviceId(0));
+        let mut cursor = Id {
+            id: 0,
+            device: DeviceId(0),
+        };
         let cursor2 = rga.insert('a', cursor);
         let _ = rga.insert('b', cursor);
         cursor = rga.insert('c', cursor2);
@@ -204,8 +216,11 @@ mod tests {
 
     #[test]
     fn weird_add_del() {
-        let mut rga = Rga::new(0);
-        let cursor = Id { id: 0, device: 0 };
+        let mut rga = Rga::new(DeviceId(0));
+        let cursor = Id {
+            id: 0,
+            device: DeviceId(0),
+        };
         let cursor2 = rga.insert('a', cursor);
         rga.insert('b', cursor);
         let _ = rga.insert('c', cursor2);
@@ -215,7 +230,7 @@ mod tests {
 
     #[test]
     fn get_index() {
-        let mut rga = Rga::new(0);
+        let mut rga = Rga::new(DeviceId(0));
         let a = rga.insert('a', rga.root());
         let b = rga.insert('b', a);
         let c = rga.insert('c', b);
@@ -226,13 +241,13 @@ mod tests {
 
     #[test]
     fn get_empty_index() {
-        let rga = Rga::new(0);
+        let rga = Rga::new(DeviceId(0));
         assert_eq!(rga.index(0), rga.root());
     }
 
     #[test]
     fn index_based_insert_delete() {
-        let mut rga = Rga::new(0);
+        let mut rga = Rga::new(DeviceId(0));
         rga.insert('a', rga.root());
         rga.delete(rga.index(1));
         assert_eq!(rga.to_list(), "");
@@ -240,7 +255,7 @@ mod tests {
 
     #[test]
     fn index_insert2() {
-        let mut rga = Rga::new(0);
+        let mut rga = Rga::new(DeviceId(0));
         rga.insert('a', rga.index(0));
         rga.insert('b', rga.index(1));
         assert_eq!(rga.to_list(), "ab");
@@ -248,7 +263,7 @@ mod tests {
 
     #[test]
     fn index_based_twice_delete() {
-        let mut rga = Rga::new(0);
+        let mut rga = Rga::new(DeviceId(0));
         rga.insert('a', rga.index(0));
         rga.insert('b', rga.index(1));
     }
