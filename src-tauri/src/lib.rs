@@ -8,6 +8,7 @@ mod rga;
 
 pub struct AppState {
     rga: Rga,
+    server_address: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -77,6 +78,14 @@ async fn delete_text(
 #[tauri::command]
 async fn get_text(state: tauri::State<'_, Mutex<AppState>>) -> Result<String, ()> {
     Ok(state.lock().await.rga.to_list())
+}
+
+#[tauri::command]
+async fn create_account(
+    key_path: &str,
+    state: tauri::State<'_, Mutex<AppState>>,
+) -> Result<(), ()> {
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

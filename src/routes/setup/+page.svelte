@@ -9,6 +9,7 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
 
+  let keyPath = $state("");
   let serverAddress = $state("");
   let firstSetup = $state(true);
 
@@ -31,6 +32,12 @@
       toast("Server address saved!");
     });
   };
+
+  const createAccount = () => {
+    await invoke("create_account", { key_path: keyPath });
+    goto("/");
+    toast("Account created!");
+  };
 </script>
 
 <div class="container w-full mx-auto p-4">
@@ -38,18 +45,17 @@
   <h3 class="scroll-m-20 text-xl tracking-tight lg:text-2xl">
     Create Account / Log In
   </h3>
-  <input
-    id="pgp-key"
+  <Input
     class="w-full mt-4"
-    type="text"
+    type="file"
     placeholder="Enter PGP public key file path"
+    bind:value={keyPath}
   />
   <div class="flex flex-row space-x-4 mt-4"></div>
   <h3 class="scroll-m-20 text-xl tracking-tight lg:text-2xl">
     Link your server address
   </h3>
   <Input
-    id="pgp-key"
     class="w-full mt-4"
     type="text"
     placeholder="Enter server address"
@@ -60,5 +66,6 @@
       <Button variant="outline" href="/"><Home />Home</Button>
     {/if}
     <Button variant="outline" onclick={saveServerAddress}><Save />Save</Button>
+    <Button variant="outline" onclick={createAccount}>Create Account</Button>
   </div>
 </div>
