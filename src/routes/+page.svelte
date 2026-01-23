@@ -14,7 +14,6 @@
       goto("/setup");
     } else {
       await invoke("load_store", {});
-      fileList = invoke("get_file_list", {});
     }
   });
 </script>

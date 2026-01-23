@@ -143,15 +143,6 @@ pub struct DocInfo {
     pub id: String,
 }
 
-#[tauri::command]
-async fn get_file_list(state: tauri::State<'_, Mutex<AppState>>) -> Result<Vec<DocInfo>, ()> {
-    if let Some(addr) = &state.lock().await.server_addr.as_ref() {
-        todo!()
-    } else {
-        return Err(());
-    }
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
