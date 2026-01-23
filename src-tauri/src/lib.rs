@@ -1,12 +1,13 @@
 use crate::rga::{DeviceId, Id, Rga};
-use rand::prelude::Rng;
-use rand::rng;
+use rand::{prelude::Rng, thread_rng, RngCore};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::async_runtime::Mutex;
 use tauri::{AppHandle, Runtime, Wry};
 use tauri_plugin_store::StoreExt;
 
+mod config;
+mod e2ee;
 mod rga;
 
 pub struct AppState {
@@ -30,7 +31,7 @@ impl AppState {
         Self {
             file: None,
             server_addr: None,
-            device: DeviceId(rng().random()),
+            device: DeviceId(thread_rng().next_u32()),
         }
     }
 
