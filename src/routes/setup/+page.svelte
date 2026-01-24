@@ -3,6 +3,8 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { toast } from "svelte-sonner";
   import { Store } from "@tauri-apps/plugin-store";
+  import { invoke } from "@tauri-apps/api/core";
+  import { open } from '@tauri-apps/plugin-dialog';
   
   import Home from "@lucide/svelte/icons/home";
   import Save from "@lucide/svelte/icons/save";
@@ -23,20 +25,30 @@
     firstSetup = storedHasSetup;
   });
 
-  const saveServerAddress = () => {
+  const saveSettings = () => {
     Store.load("settings.json").then(async (store) => {
       await store.set("serverAddress", serverAddress);
       await store.set("hasSetup", true);
       await store.save();
+      await invoke("load_store", {});
+      await invoke("create_account", { keyPath: keyPath });
       goto("/");
       toast("Server address saved!");
     });
   };
 
-  const createAccount = () => {
-    await invoke("create_account", { key_path: keyPath });
-    goto("/");
-    toast("Account created!");
+  const openKeyFile = async () => {
+    const selectedPath = await open({
+      multiple: false,
+      directory: false
+    });
+
+    if (selectedPath === null) {
+      console.log("User cancelled the picker");
+      return;
+    }
+
+    keyPath = selectedPath;
   };
 </script>
 
@@ -45,12 +57,7 @@
   <h3 class="scroll-m-20 text-xl tracking-tight lg:text-2xl">
     Create Account / Log In
   </h3>
-  <Input
-    class="w-full mt-4"
-    type="file"
-    placeholder="Enter PGP public key file path"
-    bind:value={keyPath}
-  />
+  <Button variant="outline" onclick={openKeyFile}>Enter PGP private key file path</Button>
   <div class="flex flex-row space-x-4 mt-4"></div>
   <h3 class="scroll-m-20 text-xl tracking-tight lg:text-2xl">
     Link your server address
@@ -65,7 +72,6 @@
     {#if firstSetup}
       <Button variant="outline" href="/"><Home />Home</Button>
     {/if}
-    <Button variant="outline" onclick={saveServerAddress}><Save />Save</Button>
-    <Button variant="outline" onclick={createAccount}>Create Account</Button>
+    <Button variant="outline" onclick={saveSettings}><Save />Save</Button>
   </div>
 </div>

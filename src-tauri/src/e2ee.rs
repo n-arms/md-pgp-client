@@ -11,7 +11,7 @@ use pgp::types::{EskType, Password, PkeskBytes, PublicKeyTrait, SecretKeyTrait, 
 use rand::{prelude::*, CryptoRng, Rng};
 use std::{fs, io::Cursor, path::Path};
 
-fn read_skey_file(path: impl AsRef<Path>) -> Result<SignedSecretKey> {
+pub fn read_skey_file(path: impl AsRef<Path>) -> Result<SignedSecretKey> {
     let bytes = fs::read(path.as_ref())
         .with_context(|| format!("Failed to read pgp secret key at {:?}", path.as_ref()))?;
 
@@ -29,7 +29,7 @@ fn read_pkey_file(path: impl AsRef<Path>) -> Result<SignedPublicKey> {
     Ok(pkey)
 }
 
-fn build_signed_message(
+pub fn build_signed_message(
     key: &SignedSecretKey,
     plaintext: &[u8],
     rng: &mut (impl Rng + CryptoRng),
