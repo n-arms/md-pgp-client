@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use crate::e2ee::{build_signed_message, read_skey_file};
 use crate::rga::{Id, Rga};
+use pgp::composed::SignedSecretKey;
 use pgp::crypto::hash::HashAlgorithm;
 use pgp::ser::Serialize;
 use rand::{prelude::Rng, thread_rng, RngCore};
@@ -16,6 +17,7 @@ mod rga;
 pub struct AppState {
     rga: Rga,
     server_address: Option<PathBuf>,
+    key: Option<SignedSecretKey>,
 }
 
 #[derive(Clone, Debug)]
@@ -31,6 +33,7 @@ impl AppState {
         Self {
             rga,
             server_address: None,
+            key: None,
         }
     }
 
@@ -91,13 +94,10 @@ async fn get_text(state: tauri::State<'_, Mutex<AppState>>) -> Result<String, ()
 }
 
 #[tauri::command]
-async fn create_account(
-    key_path: &str,
-    state: tauri::State<'_, Mutex<AppState>>,
-) -> Result<(), String> {
+async fn create_account(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), String> {
     let mut url = state.lock().await.server_address.as_ref().unwrap().clone();
+    let skey = state.lock().await.key.as_ref().unwrap().clone();
     url.push("create_account");
-    let skey = read_skey_file(key_path).map_err(|err| err.to_string())?;
     let pkey = skey.signed_public_key();
     let packet_contents = build_signed_message(
         &skey,
@@ -112,7 +112,42 @@ async fn create_account(
         .body(packet_contents)
         .send()
         .await
-        .map_err(|err| format!("Building client request with url {}", url.to_str().unwrap()))?;
+        .map_err(|err| {
+            format!(
+                "Building client request with url {}:\n{err}",
+                url.to_str().unwrap()
+            )
+        })?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn create_document(
+    name: &str,
+    state: tauri::State<'_, Mutex<AppState>>,
+) -> Result<(), String> {
+    let mut url = state.lock().await.server_address.as_ref().unwrap().clone();
+    let skey = state.lock().await.key.as_ref().unwrap().clone();
+    url.push("create_document");
+    let packet_contents = build_signed_message(
+        &skey,
+        name.as_bytes(),
+        &mut thread_rng(),
+        HashAlgorithm::Sha256,
+    )
+    .map_err(|err| err.to_string())?;
+    let client = reqwest::Client::new();
+    client
+        .post(url.to_str().unwrap())
+        .body(packet_contents)
+        .send()
+        .await
+        .map_err(|err| {
+            format!(
+                "Building client request with url {}:\n{err}",
+                url.to_str().unwrap()
+            )
+        })?;
     Ok(())
 }
 
@@ -136,6 +171,12 @@ async fn load_store(
             .and_then(|v| v.as_str().map(|s| s.to_string()))
             .unwrap();
         state.lock().await.server_address = Some(server_address.into());
+        let key_path = store
+            .get("keyPath")
+            .and_then(|v| v.as_str().map(ToOwned::to_owned))
+            .unwrap_or(String::new());
+        let skey = read_skey_file(key_path).map_err(|err| err.to_string())?;
+        state.lock().await.key = Some(skey);
     }
 
     Ok(())
@@ -151,7 +192,8 @@ pub fn run() {
             delete_text,
             get_text,
             create_account,
-            load_store
+            load_store,
+            create_document
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::default().build())
