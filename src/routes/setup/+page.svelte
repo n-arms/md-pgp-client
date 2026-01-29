@@ -28,10 +28,11 @@
   const saveSettings = () => {
     Store.load("settings.json").then(async (store) => {
       await store.set("serverAddress", serverAddress);
+      await store.set("keyPath", keyPath);
       await store.set("hasSetup", true);
       await store.save();
       await invoke("load_store", {});
-      await invoke("create_account", { keyPath: keyPath });
+      await invoke("create_account", {});
       goto("/");
       toast("Server address saved!");
     });
