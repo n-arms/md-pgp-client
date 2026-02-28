@@ -161,20 +161,23 @@ async fn create_document(
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ShareDocument {
-    uuid: String,
-    key_id: String,
+    doc_uuid: String,
+    sharee_key_id: String,
 }
 
 #[tauri::command]
 async fn share_document(
-    uuid: String,
-    key_id: String,
+    doc_uuid: String,
+    sharee_key_id: String,
     state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<(), String> {
     let mut url = state.lock().await.server_address.as_ref().unwrap().clone();
     let skey = state.lock().await.key.as_ref().unwrap().clone();
     url.push("share_document");
-    let share_doc = ShareDocument { uuid, key_id };
+    let share_doc = ShareDocument {
+        doc_uuid,
+        sharee_key_id,
+    };
     let bytes = serde_json::to_string(&share_doc).unwrap();
     let packet_contents = build_signed_message(
         &skey,

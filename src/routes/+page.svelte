@@ -13,6 +13,8 @@
     const hasSetup = await store.get("hasSetup");
     if (!hasSetup) {
       goto("/setup");
+    } else {
+      await invoke("load_store", {});
     }
   });
 
