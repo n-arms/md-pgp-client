@@ -161,13 +161,13 @@ async fn create_document(
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ShareDocument {
-    doc_uuid: String,
+    doc_uuid: Uuid,
     sharee_key_id: String,
 }
 
 #[tauri::command]
 async fn share_document(
-    doc_uuid: String,
+    doc_uuid: Uuid,
     sharee_key_id: String,
     state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<(), String> {

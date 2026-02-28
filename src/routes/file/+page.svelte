@@ -30,7 +30,7 @@
 
   const shareDoc = async () => {
     console.log(`Sharing document with uuid "${uuid}" and user "${sharedUser}"`);
-    await invoke("share_document", { uuid, keyId: sharedUser });
+    await invoke("share_document", { docUuid: uuid, shareeKeyId: sharedUser });
   };
 </script>
 
