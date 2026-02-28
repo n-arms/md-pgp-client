@@ -64,7 +64,7 @@ async fn insert_text(
     for i in ((start + 1)..=end).rev() {
         app_state.delete_at_index(i as usize);
     }
-    for (i, char) in text.char_indices() {
+    for (i, char) in text.chars().enumerate() {
         app_state.insert_at_index(start as usize + i, char);
     }
     Ok(())
