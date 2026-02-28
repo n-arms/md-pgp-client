@@ -13,13 +13,18 @@
     const hasSetup = await store.get("hasSetup");
     if (!hasSetup) {
       goto("/setup");
+    } else {
+      await invoke("load_store", {});
     }
   });
 
   const createFile = async () => {
     console.log("Creating file", fileName);
-    await invoke("create_document", { name: fileName });
-    goto("/file");
+    const uuid = await invoke<string>("create_document", { name: fileName });
+    const params = new URLSearchParams();
+    params.set('uuid', uuid);
+    params.set('name', fileName);
+    goto(`/file?${params.toString()}`);
   };
 </script>
 

@@ -4,11 +4,14 @@ use crate::e2ee::{build_signed_message, read_skey_file};
 use crate::rga::{Id, Rga};
 use pgp::composed::SignedSecretKey;
 use pgp::crypto::hash::HashAlgorithm;
-use pgp::ser::Serialize;
+use pgp::ser::Serialize as PgpSerialize;
 use rand::{prelude::Rng, thread_rng, RngCore};
+use serde::{Deserialize, Serialize};
 use tauri::async_runtime::Mutex;
+use tauri::ipc::IpcResponse;
 use tauri::{AppHandle, Runtime, Wry};
 use tauri_plugin_store::StoreExt;
+use uuid::Uuid;
 
 mod config;
 mod e2ee;
@@ -125,13 +128,60 @@ async fn create_account(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), 
 async fn create_document(
     name: &str,
     state: tauri::State<'_, Mutex<AppState>>,
-) -> Result<(), String> {
+) -> Result<String, String> {
     let mut url = state.lock().await.server_address.as_ref().unwrap().clone();
     let skey = state.lock().await.key.as_ref().unwrap().clone();
     url.push("create_document");
     let packet_contents = build_signed_message(
         &skey,
         name.as_bytes(),
+        &mut thread_rng(),
+        HashAlgorithm::Sha256,
+    )
+    .map_err(|err| err.to_string())?;
+    let client = reqwest::Client::new();
+    let response = client
+        .post(url.to_str().unwrap())
+        .body(packet_contents)
+        .send()
+        .await
+        .map_err(|err| {
+            format!(
+                "Building client request with url {}:\n{err}",
+                url.to_str().unwrap()
+            )
+        })?;
+    let uuid_text = response
+        .text()
+        .await
+        .map_err(|err| format!("Malformed response:\n{err}"))?;
+    let uuid = Uuid::parse_str(&uuid_text).map_err(|err| format!("Malformed uuid:\n{err}"))?;
+    Ok(uuid.to_string())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ShareDocument {
+    doc_uuid: Uuid,
+    sharee_key_id: String,
+}
+
+#[tauri::command]
+async fn share_document(
+    doc_uuid: Uuid,
+    sharee_key_id: String,
+    state: tauri::State<'_, Mutex<AppState>>,
+) -> Result<(), String> {
+    let mut url = state.lock().await.server_address.as_ref().unwrap().clone();
+    let skey = state.lock().await.key.as_ref().unwrap().clone();
+    url.push("share_document");
+    let share_doc = ShareDocument {
+        doc_uuid,
+        sharee_key_id,
+    };
+    let bytes = serde_json::to_string(&share_doc).unwrap();
+    let packet_contents = build_signed_message(
+        &skey,
+        bytes.as_bytes(),
         &mut thread_rng(),
         HashAlgorithm::Sha256,
     )
@@ -193,7 +243,8 @@ pub fn run() {
             get_text,
             create_account,
             load_store,
-            create_document
+            create_document,
+            share_document
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::default().build())

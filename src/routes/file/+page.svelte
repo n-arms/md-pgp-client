@@ -1,8 +1,14 @@
 <script lang="ts">
   import Button from "$lib/components/ui/button/button.svelte";
+  import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
+  import { page } from "$app/state";
+
+  const uuid = $derived(page.url.searchParams.get("uuid"));
+  const name = $derived(page.url.searchParams.get("name"));
 
   let rust_msg = $state("");
+  let sharedUser = $state("");
 
   const beforeInputHandler = async e => {
     const {selectionStart, selectionEnd} = e.target;
@@ -21,16 +27,21 @@
       alert(`Unknown input type ${e.inputType}`);
     }
   };
+
+  const shareDoc = async () => {
+    console.log(`Sharing document with uuid "${uuid}" and user "${sharedUser}"`);
+    await invoke("share_document", { docUuid: uuid, shareeKeyId: sharedUser });
+  };
 </script>
 
 <div class="container w-full mx-auto p-4">
   <div class="flex flex-col space-y-4">
     <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-      Insert file name here
+      {name}
     </h1>
-    <input class="border border-gray-300 rounded-md p-2" id="new-user" type="text" placeholder="User key" />
+    <input class="border border-gray-300 rounded-md p-2" id="new-user" type="text" placeholder="User key" bind:value={sharedUser}/>
     <div class="flex flex-row space-x-4">
-      <Button variant="outline">Add User</Button>
+      <Button variant="outline" onclick={shareDoc}>Add User</Button>
       <Button variant="outline" href="/">Home</Button>
     </div>
   </div>
